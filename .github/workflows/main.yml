@@ -1,0 +1,37 @@
+name: Persistent VPS
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+jobs:
+  vps-session:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      
+      - name: Install prerequisites
+        run: |
+          sudo apt update
+          sudo apt install -y tmate curl unzip sudo net-tools
+      
+      - name: Install Tailscale
+        run: curl -fsSL https://tailscale.com/install.sh | sh
+      
+      - name: Start Tailscale
+        run: |
+          sudo tailscaled &
+          sleep 8
+          sudo tailscale up --authkey ${{ secrets.TAILSCALE_AUTHKEY }} --hostname=my-github-vps || echo "Tailscale already up"
+      
+      - name: Start tmate session for SSH
+        uses: mxschmitt/action-tmate@v3
+        with:
+          detached: true
+
+      - name: Show Tailscale IP
+        run: |
+          echo "Tailscale IP:"
+          tailscale ip -4 || echo "Tailscale IP not found"
