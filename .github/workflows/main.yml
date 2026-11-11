@@ -1,8 +1,8 @@
 name: Persistent VPS
 on:
+  workflow_dispatch:
   schedule:
     - cron: '0 */6 * * *'
-  workflow_dispatch:
 
 jobs:
   vps-session:
@@ -11,27 +11,26 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
-      
-      - name: Install prerequisites
-        run: |
-          sudo apt update
-          sudo apt install -y tmate curl unzip sudo net-tools
-      
+
       - name: Install Tailscale
         run: curl -fsSL https://tailscale.com/install.sh | sh
-      
-      - name: Start Tailscale
+
+      - name: Start Tailscale & Set Password
         run: |
           sudo tailscaled &
-          sleep 8
+          sleep 5
           sudo tailscale up --authkey ${{ secrets.TAILSCALE_AUTHKEY }} --hostname=my-github-vps || echo "Tailscale already up"
-      
-      - name: Start tmate session for SSH
-        uses: mxschmitt/action-tmate@v3
-        with:
-          detached: true
-
-      - name: Show Tailscale IP
-        run: |
-          echo "Tailscale IP:"
-          tailscale ip -4 || echo "Tailscale IP not found"
+          echo "root:123456" | sudo chpasswd
+          sudo sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+          sudo sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
+          sudo systemctl restart ssh
+          
+          IP=$(tailscale ip -4)
+          echo "=================================================="
+          echo "✅ VPS IS READY!"
+          echo "👉 Connect using: ssh root@$IP"
+          echo "👉 Password: 123456"
+          echo "=================================================="
+          
+          # این دستور سرور رو برای حدود ۶ ساعت روشن نگه می‌داره
+          sleep 21000
