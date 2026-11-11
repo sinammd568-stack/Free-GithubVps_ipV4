@@ -19,7 +19,7 @@ jobs:
         run: |
           sudo tailscaled &
           sleep 5
-          sudo tailscale up --authkey ${{ secrets.TAILSCALE_AUTHKEY }} --hostname=my-github-vps || echo "Tailscale already up"
+          sudo tailscale up --authkey ${{ secrets.TAILSCALE_AUTHKEY }} --hostname=my-github-vps
           echo "root:123456" | sudo chpasswd
           sudo sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
           sudo sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
@@ -32,5 +32,5 @@ jobs:
           echo "👉 Password: 123456"
           echo "=================================================="
           
-          # این دستور سرور رو برای حدود ۶ ساعت روشن نگه می‌داره
+          # سرور رو حدود ۶ ساعت روشن نگه می‌داره
           sleep 21000
